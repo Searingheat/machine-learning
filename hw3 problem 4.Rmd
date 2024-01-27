@@ -1,0 +1,82 @@
+---
+title: "STA314 hw3 problem 4"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+# Problem 4
+
+## 1
+```{r}
+library(ISLR)
+library(tidyverse)
+data(Auto)
+Auto <- Auto %>% mutate(mpg01 = ifelse(mpg > median(mpg), 1, 0))
+num_samples <- nrow(Auto)
+set.seed(0)
+train_index <- sample(num_samples,num_samples*0.7)  
+train <- Auto[train_index, ]
+test <- Auto[-train_index, ]
+```
+
+## 2
+
+```{r}
+library(MASS)
+lda.fit <- lda(mpg01 ~ cylinders + displacement + horsepower + weight + acceleration + year, data = train)
+lda.class <- predict(lda.fit, test)$class
+mean(lda.class != test$mpg01)  
+```
+
+The test error here is 0.1186441.
+
+## 3
+
+```{r}
+qda.fit <- qda(mpg01 ~ cylinders + displacement + horsepower + weight + acceleration + year, data = train)
+qda.class <- predict(qda.fit, test)$class
+mean(qda.class != test$mpg01)  
+```
+
+The test error here is 0.1101695.
+
+## 4
+
+```{r}
+glm.fit <- glm(mpg01 ~ cylinders + displacement + horsepower + weight + acceleration + year, data = train, family = binomial)
+glm.probs <- predict(glm.fit, test, type="response")
+glm.pred <- ifelse(glm.probs > 0.5, 1, 0)
+mean(glm.pred != test$mpg01)
+```
+
+The test error here is 0.1016949.
+
+## 5
+
+LDA:
+
+```{r}
+library(pROC)
+lda.pred <- predict(lda.fit, test)
+roc(test$mpg01~lda.pred$posterior[,2],plot=TRUE,print.auc=TRUE)
+```
+
+QDA:
+
+```{r}
+qda.pred = predict(qda.fit, test)
+roc(test$mpg01~qda.pred$posterior[,2],plot=TRUE,print.auc=TRUE)
+```
+
+Logistic regression:
+
+```{r}
+roc(test$mpg01~glm.probs,plot=TRUE,print.auc=TRUE)
+```
+
+In this case, I will choose the logistic regression classifier since it has the highest AUC. 
+
+
+
